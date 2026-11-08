@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DJ 记账本</title>
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="记账本">
+<meta name="theme-color" content="#f6f3ee">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{--bg:#f6f3ee;--card:#fff;--ink:#2b2622;--sub:#8a8178;--line:#ece6dd;--out:#c4553b;--in:#3d8a5f;--accent:#2f5d62;--accent2:#e9f0ef;--warn:#c98a1b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+body{padding:env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 150px)}
+.wrap{max-width:520px;margin:0 auto;padding:12px 14px}
+header{display:flex;align-items:center;justify-content:space-between;margin:4px 0 12px}
+.month{display:flex;align-items:center;gap:6px;font-size:19px;font-weight:700}
+.navbtn{border:none;background:var(--card);width:34px;height:34px;border-radius:50%;font-size:18px;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.iconbtn{border:none;background:none;font-size:22px;color:var(--sub);padding:6px}
+.card{background:var(--card);border-radius:16px;padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(60,40,20,.05)}
+.ttl{font-size:13px;color:var(--sub);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.hero{text-align:center;padding:18px 16px}
+.hero .lbl{font-size:13px;color:var(--sub)}
+.hero .num{font-size:38px;font-weight:800;margin:4px 0;font-variant-numeric:tabular-nums}
+.hero .sub{font-size:13px;color:var(--sub)}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:12px}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:6px;transition:width .3s}
+.bar.over>i{background:var(--out)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);text-align:center}
+.grid3 .lbl{font-size:12px;color:var(--sub)}
+.grid3 .val{font-size:17px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
+.in{color:var(--in)}.out{color:var(--out)}
+.todo{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.todo:last-child{border-bottom:none}
+.ck{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;background:#fff}
+.todo.done .ck{background:var(--in);border-color:var(--in)}
+.todo.done .nm,.todo.done .am{color:var(--sub);text-decoration:line-through}
+.todo .dd{width:42px;font-size:12px;color:var(--sub);flex:none}
+.todo .nm{flex:1;font-size:15px;min-width:0}
+.todo .nm small{display:block;font-size:11px;color:var(--sub);text-decoration:none}
+.todo .am{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.todo.late .dd{color:var(--out);font-weight:600}
+.tag{font-size:10px;padding:1px 5px;border-radius:4px;background:var(--accent2);color:var(--accent);margin-left:4px;vertical-align:1px}
+.tag.inc{background:#e7f3ec;color:var(--in)}
+.debt{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.debt:last-child{border-bottom:none}
+.debt .r{color:var(--sub);font-size:12px}
+.debt b{font-variant-numeric:tabular-nums}
+.bigdebt{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums}
+.seg{display:flex;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:12px}
+.seg button{flex:1;border:none;background:none;padding:8px;border-radius:8px;font-size:15px;color:var(--sub)}
+.seg button.on{background:var(--card);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.day{font-size:12px;color:var(--sub);margin:14px 4px 6px;display:flex;justify-content:space-between}
+.item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:none}
+.emo{width:36px;height:36px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex:none}
+.item .mid{flex:1;min-width:0}.item .c{font-size:15px}
+.item .note{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .a{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
+.empty{text-align:center;color:var(--sub);font-size:14px;padding:22px 0}
+.cats .row{display:flex;align-items:center;gap:8px;font-size:13px;margin:7px 0}
+.cats .nm{width:84px;white-space:nowrap}.cats .b{flex:1;height:8px;background:var(--line);border-radius:5px;overflow:hidden}
+.cats .b i{display:block;height:100%;background:#d9a38f;border-radius:5px}.cats .amt{width:72px;text-align:right;font-variant-numeric:tabular-nums}
+.bottom{position:fixed;left:0;right:0;bottom:0;background:rgba(246,243,238,.96);backdrop-filter:blur(8px);padding:10px 14px calc(env(safe-area-inset-bottom) + 10px);z-index:5}
+.bottom .in2{max-width:520px;margin:0 auto}
+.fab{width:100%;border:none;background:var(--accent);color:#fff;font-size:17px;font-weight:600;padding:14px;border-radius:14px;box-shadow:0 4px 14px rgba(47,93,98,.3)}
+.tabs{display:flex;gap:8px;margin-top:8px}
+.tabs button{flex:1;border:none;background:none;font-size:14px;color:var(--sub);padding:6px}
+.tabs button.on{color:var(--accent);font-weight:700}
+.status{font-size:12px;color:var(--warn);text-align:center;margin:-4px 0 10px}
+.mask{position:fixed;inset:0;background:rgba(30,25,20,.35);display:none;z-index:10}.mask.show{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-radius:20px 20px 0 0;z-index:11;max-width:520px;margin:0 auto;padding:14px 16px calc(env(safe-area-inset-bottom) + 16px);transform:translateY(105%);transition:transform .25s ease;max-height:92vh;overflow:auto;visibility:hidden;transition:transform .25s ease,visibility .25s}
+.sheet.show{transform:none;visibility:visible}
+.amtin{display:flex;align-items:baseline;gap:6px;border-bottom:2px solid var(--line);padding:4px 2px 8px;margin-bottom:12px}
+.amtin span{font-size:24px;color:var(--sub)}
+.amtin input{border:none;outline:none;font-size:34px;font-weight:700;width:100%;background:none;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.chip{border:1px solid var(--line);background:var(--card);padding:7px 10px;border-radius:18px;font-size:14px;color:var(--ink)}
+.chip.on{border-color:var(--accent);background:var(--accent2);color:var(--accent);font-weight:600}
+.f{display:flex;gap:10px;margin-bottom:10px}.f>div{flex:1}
+.f label{font-size:12px;color:var(--sub);display:block;margin-bottom:4px}
+.f input,.f select{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:15px;background:var(--card);color:var(--ink);font-family:inherit}
+.btns{display:flex;gap:10px;margin-top:8px}
+.btns button{flex:1;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:600}
+.primary{background:var(--accent);color:#fff}.ghost{background:var(--bg);color:var(--ink)}.danger{background:#fbeae5;color:var(--out)}
+.hint{font-size:12px;color:var(--sub);margin:4px 0 8px;line-height:1.5}
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 16px);transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .2s;z-index:20;pointer-events:none}
+.toast.show{opacity:.92}
+textarea{width:100%;height:150px;border:1px solid var(--line);border-radius:10px;padding:8px;font-size:12px;font-family:ui-monospace,monospace}
+.small{font-size:12px;color:var(--sub)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="month"><button class="navbtn" id="prev" aria-label="上个月">‹</button><span id="mlabel"></span><button class="navbtn" id="next" aria-label="下个月">›</button></div>
+    <span><span id="syncOk" class="small" style="display:none;margin-right:4px">✓ 已同步</span><button class="iconbtn" id="openSet" aria-label="设置">⚙︎</button></span>
+  </header>
+  <div class="status" id="status"></div>
+
+  <!-- 首页 -->
+  <div id="vHome">
+    <div class="card hero">
+      <div class="lbl">这个月日常还能花（吃饭 · 咖啡零食 · 交通 · 日用）</div>
+      <div class="num" id="hLeft">—</div>
+      <div class="sub" id="hSub"></div>
+      <div class="bar" id="hBar"><i></i></div>
+    </div>
+
+    <div class="card">
+      <div class="grid3">
+        <div><div class="lbl">本月要付</div><div class="val out" id="gPay">0</div></div>
+        <div><div class="lbl">本月进账</div><div class="val in" id="gIn">0</div></div>
+        <div><div class="lbl">已完成</div><div class="val" id="gCnt">0/0</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ttl"><span>本月清单 · 付完点一下 ✓</span><span id="leftPay"></span></div>
+      <div id="todo"></div>
+    </div>
+
+    <div class="card" id="zkCard">
+      <div class="ttl"><span>🔒 专款账户 · 存着不动，只付大额</span><span class="small" id="zkWhen"></span></div>
+      <div class="bigdebt" id="zkBal">—</div>
+      <div class="small" id="zkSub" style="margin:2px 0 8px"></div>
+      <div id="zkTip" class="hint" style="background:#fff7e6;color:#8a5a00;border-radius:10px;padding:8px 10px;margin:6px 0 8px;display:none"></div>
+      <div class="small" style="margin-bottom:4px">接下来要从专款付的：</div>
+      <div id="zkNext"></div>
+    </div>
+
+    <div class="card">
+      <div class="ttl"><span>还欠多少 · 点一笔可改余额或记还款</span><button class="chip" id="addDebt" style="padding:4px 10px;font-size:13px">＋ 新增</button></div>
+      <div class="bigdebt" id="dTotal">—</div>
+      <div class="small" id="dSplit" style="margin:2px 0 8px"></div>
+      <div id="debts"></div>
+    </div>
+  </div>
+
+  <!-- 明细 -->
+  <div id="vList" style="display:none">
+    <div class="card"><div class="grid3">
+      <div><div class="lbl">收入</div><div class="val in" id="sIn">0</div></div>
+      <div><div class="lbl">支出</div><div class="val out" id="sOut">0</div></div>
+      <div><div class="lbl">结余</div><div class="val" id="sNet">0</div></div>
+    </div></div>
+    <div class="card cats" id="catCard"><div class="ttl"><span>支出分类</span></div><div id="cats"></div></div>
+    <div class="card" style="padding-top:4px"><div id="list"></div></div>
+  </div>
+</div>
+
+<div class="bottom"><div class="in2">
+  <button class="fab" id="addBtn">＋ 记一笔</button>
+  <div class="tabs"><button data-v="home" class="on">首页</button><button data-v="list">记账明细</button></div>
+</div></div>
+
+<div class="mask" id="mask"></div>
+
+<div class="sheet" id="sheet">
+  <div class="seg" id="typeSeg"><button data-t="out" class="on">支出</button><button data-t="in">收入</button></div>
+  <div class="amtin"><span>¥</span><input id="amt" inputmode="decimal" placeholder="0.00" autocomplete="off"></div>
+  <div class="chips" id="catChips"></div>
+  <div class="f" id="debtPickRow" style="display:none"><div><label>还的是哪一笔？选了会自动减少它的“还欠”余额</label><select id="debtPick"></select></div></div>
+  <div class="f">
+    <div><label>账户</label><select id="acct"><option value="B">日常账户（B）</option><option value="A">专款账户（A）</option></select></div>
+    <div><label>日期</label><input type="date" id="date"></div>
+  </div>
+  <div class="f"><div><label>备注（可不填）</label><input id="note" maxlength="60" placeholder="比如：超市买菜"></div></div>
+  <div class="btns"><button class="ghost" id="cancel">取消</button><button class="primary" id="save">保存</button></div>
+  <div class="btns" id="delRow" style="display:none"><button class="danger" id="del">删除这笔</button></div>
+</div>
+
+<div class="sheet" id="debtSheet">
+  <div style="font-weight:700;font-size:17px" id="dsName"></div>
+  <div class="hint" id="dsInfo"></div>
+  <div class="f" id="dsNewRow" style="display:none"><div><label>名称</label><input id="dsNameIn" maxlength="20" placeholder="比如：平安保单新借款"></div></div>
+  <div class="f"><div><label>现在还欠（按 App 上显示的填）</label><input id="dsBal" inputmode="decimal"></div></div>
+  <div class="f">
+    <div><label>每月计划还（不固定就填 0）</label><input id="dsMon" inputmode="decimal"></div>
+    <div><label>每月几号还</label><input id="dsDay" inputmode="numeric"></div>
+  </div>
+  <div class="f" id="dsRateRow"><div><label>年利率 %（不知道可不填）</label><input id="dsRate" inputmode="decimal"></div></div>
+  <div class="btns"><button class="ghost" id="dsCancel">取消</button><button class="primary" id="dsSave">保存</button></div>
+  <div id="dsPayBox" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
+    <div style="font-weight:600;font-size:15px">记一笔还款</div>
+    <div class="hint">金额随你定。还了多少就填多少，余额会自动减少，同时记进账本。</div>
+    <div class="f"><div><input id="dsPay" inputmode="decimal" placeholder="这次还了多少"></div>
+      <div style="flex:none"><select id="dsPayAcct" style="width:auto"><option value="B">从日常账户</option><option value="A">从专款账户</option></select></div></div>
+    <div class="btns" style="margin-top:0"><button class="primary" id="dsPayBtn">还了这笔</button></div>
+  </div>
+</div>
+
+<div class="sheet" id="setSheet">
+  <div style="font-weight:700;font-size:17px;margin-bottom:12px">设置</div>
+  <div class="f"><div><label>每月日常预算（吃饭、咖啡零食、交通、日用）</label><input id="budgetIn" inputmode="decimal"></div></div>
+  <div class="f"><div><label>专款账户现在的余额（按银行 App 显示的填）</label><input id="startAIn" inputmode="decimal"></div></div>
+  <div class="hint">填一次就行，之后 App 会按你记的进出自动算。和银行对不上时，再来改一下。</div>
+  <div class="hint">数据只存在这部手机里。每月导出一次发给 Claude，既能更新负债表，也是一份备份。</div>
+  <div class="btns"><button class="primary" id="syncClaude">同步给 Claude</button></div>
+  <div class="hint" style="margin-top:6px">点一下会自动复制全部数据并打开 Claude，在对话里粘贴发送就行。</div>
+  <div class="btns"><button class="ghost" id="exportAll">只复制数据</button></div>
+  <div class="btns"><button class="ghost" id="copyBtn">只复制本月明细</button><button class="ghost" id="importOpen">导入数据</button></div>
+  <textarea id="exportBox" style="display:none;margin-top:10px" readonly></textarea>
+  <div id="importBox" style="display:none;margin-top:10px">
+    <div class="hint">把 Claude 发给你的那一整段数据粘贴到下面，再点“确认导入”。导入会替换这部手机上现有的数据。</div>
+    <textarea id="importText" placeholder="在这里粘贴"></textarea>
+    <div class="btns"><button class="danger" id="importDo">确认导入</button></div>
+  </div>
+  <div class="btns"><button class="ghost" id="setCancel">关闭</button><button class="primary" id="setSave">保存设置</button></div>
+</div>
+
+<div class="sheet" id="confirmSheet">
+  <div style="font-size:16px;margin:6px 0 16px">确定删除这笔记录吗？</div>
+  <div class="btns"><button class="ghost" id="cNo">再想想</button><button class="danger" id="cYes">删除</button></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+const OUT=[["吃饭买菜","🍚","B",1],["咖啡零食","☕","B",1],["交通出行","🚗","B",1],["日用杂费","🧻","B",1],["孩子日常","🎒","B",0],["水电话费","💡","B",0],
+ ["医疗看病","💊","B",0],["还款","💳","B",0],["社保医保","🏥","B",0],["万能险存入","🐷","B",0],["保险保费","🛡️","A",0],
+ ["学费","📚","A",0],["兴趣班","🎨","A",0],["物业费","🏠","A",0],["车险车修","🔧","A",0],["其他支出","📝","B",0]];
+const IN=[["固定收入","💰","B"],["失业金","📄","B"],["季度款","🏦","A"],["车位租金","🅿️","A"],["保险佣金","🤝","B"],["代采/副业","📦","B"],["其他收入","✨","B"]];
+const META={};OUT.forEach(c=>META[c[0]]={e:c[1],a:c[2],budget:!!c[3]});IN.forEach(c=>META[c[0]]={e:c[1],a:c[2]});
+const $=id=>document.getElementById(id);
+const fmt=n=>(Math.round(n*100)/100).toLocaleString("zh-CN",{maximumFractionDigits:2});
+const pad=n=>String(n).padStart(2,"0");
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let cur=today().slice(0,7),db=null,editing=null,type="out",cat="吃饭买菜",view="home",editDebt=null,busy=false;
+let entries=[],paid={},plan=null,budget=2000;
+function toast(t){const el=$("toast");el.textContent=t;el.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove("show"),1600)}
+function status(t){$("status").textContent=t||""}
+
+/* ---------- 本月清单（来自计划数据） ---------- */
+function inRange(it,m){
+  if(it.from&&m<it.from)return false; if(it.to&&m>it.to)return false;
+  if(it.months&&it.months.length&&!it.months.includes(+m.slice(5)))return false;
+  return true;
+}
+function monthItems(m){
+  if(!plan)return[];
+  const out=[];
+  (plan.debts||[]).forEach(d=>{if(d.monthly>0&&inRange(d,m))out.push({key:"d:"+d.name,name:d.name,amount:d.monthly,day:d.day||1,account:"B",kind:"out",cat:"还款",hint:d.est?"金额是估算，以账单为准":""})});
+  (plan.bills||[]).forEach(b=>{if(inRange(b,m))out.push({key:"b:"+b.name,name:b.name,amount:b.amount,day:b.day||1,account:b.account||"B",kind:"out",cat:b.cat||"其他支出",hint:b.hint||""})});
+  (plan.incomes||[]).forEach(b=>{if(inRange(b,m))out.push({key:"i:"+b.name,name:b.name,amount:b.amount,day:b.day||1,account:b.account||"B",kind:"in",cat:b.cat||"其他收入",hint:b.hint||""})});
+  return out.sort((a,b)=>a.day-b.day);
+}
+
+/* ---------- 数据：先存本机，联网后自动同步 ---------- */
+const LKEY="dj-ledger-v3";
+let S=(function(){let o=null;try{o=JSON.parse(localStorage.getItem(LKEY))}catch(e){}
+  o=o||{};o.entries=o.entries||{};o.paid=o.paid||{};o.queue=o.queue||[];if(typeof o.budget!=="number")o.budget=2000;if(!o.startA)o.startA={amount:0,set:0};if(!("plan" in o))o.plan=null;return o})();
+let storageOK=true;
+function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify(S))}catch(e){storageOK=false}}
+function newId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function refresh(){entries=Object.values(S.entries).filter(e=>e.month===cur);paid=S.paid[cur]||{};plan=S.plan;budget=S.budget;render();renderZk();syncLabel()}
+function enqueue(op){
+  if(op.t==="plan"||op.t==="budget")S.queue=S.queue.filter(q=>q.t!==op.t);
+  if(op.t==="p")S.queue=S.queue.filter(q=>!(q.t==="p"&&q.m===op.m));
+  if(op.t==="e"||op.t==="d")S.queue=S.queue.filter(q=>!((q.t==="e"||q.t==="d")&&q.id===op.id));
+  saveLocal();refresh();
+}
+function putEntry(obj){if(!obj.id)obj.id=newId();S.entries[obj.id]=obj;enqueue({t:"e",id:obj.id});return obj.id}
+function rmEntry(id){delete S.entries[id];enqueue({t:"d",id})}
+function putPaid(m,done){S.paid[m]=done;enqueue({t:"p",m})}
+function putPlan(p){S.plan=p;enqueue({t:"plan"})}
+function putBudget(v,a){S.budget=v;if(a)S.startA=a;enqueue({t:"budget"})}
+const withTimeout=(pr,ms)=>Promise.race([pr,new Promise((_,rej)=>setTimeout(()=>rej({code:"timeout"}),ms))]);
+let flushing=false,lastSync=null;
+async function flush(){
+  if(!db||flushing)return;flushing=true;
+  try{
+    while(S.queue.length){
+      const op=S.queue[0];let pr;
+      if(op.t==="e"){const e=S.entries[op.id];if(e){const body=Object.assign({},e);delete body.id;pr=db.collection("entries").doc(op.id).set(body)}}
+      else if(op.t==="d")pr=db.collection("entries").doc(op.id).delete();
+      else if(op.t==="p")pr=db.doc("paid/"+op.m).set({done:S.paid[op.m]||{}});
+      else if(op.t==="plan"&&S.plan)pr=db.doc("config/plan").set(S.plan);
+      else if(op.t==="budget")pr=db.doc("config/settings").set({budget:S.budget,startA:S.startA});
+      if(pr)await withTimeout(pr,15000);
+      S.queue.shift();saveLocal();
+    }
+    lastSync=new Date();
+  }catch(e){ if(e&&e.code==="quota_exceeded")toast("云端存储已满，请删除一些旧记录") }
+  finally{flushing=false;syncLabel()}
+}
+function syncLabel(){S.queue=[];$("status").textContent=storageOK?(plan?"":"还没有数据 · 点右上角 ⚙︎ →“导入数据”"):"⚠️ 这台设备无法保存数据";$("syncOk").style.display="none"}
+const pendingIds=()=>new Set(S.queue.filter(q=>q.t==="e"||q.t==="d").map(q=>q.id));
+let unsubE=null,unsubP=null;
+function subscribe(){
+  refresh();
+  if(!db)return;
+  if(unsubE){unsubE();unsubE=null} if(unsubP){unsubP();unsubP=null}
+  const m=cur;
+  unsubE=db.collection("entries").where("month","==",m).onSnapshot(s=>{
+    const pend=pendingIds(),seen=new Set();
+    s.docs.forEach(d=>{seen.add(d.id);if(!pend.has(d.id))S.entries[d.id]=Object.assign({id:d.id},d.data())});
+    if(!s.metadata.fromCache)Object.values(S.entries).forEach(e=>{if(e.month===m&&!seen.has(e.id)&&!pend.has(e.id))delete S.entries[e.id]});
+    saveLocal();if(m===cur)refresh();
+  },()=>{});
+  unsubP=db.doc("paid/"+m).onSnapshot(s=>{
+    if(S.queue.some(q=>q.t==="p"&&q.m===m))return;
+    S.paid[m]=(s.exists&&s.data().done)||{};saveLocal();if(m===cur)refresh();
+  },()=>{});
+}
+/* ---------- 专款账户 ---------- */
+function zkBalance(){const st=S.startA||{amount:0,set:0};let b=st.amount||0;
+  Object.values(S.entries).forEach(e=>{if(e.account==="A"&&(e.createdAt||0)>(st.set||0))b+=e.type==="in"?e.amount:-e.amount});return Math.round(b*100)/100}
+function addM(m,k){let [y,mo]=m.split("-").map(Number);mo+=k;while(mo>12){mo-=12;y++}return y+"-"+pad(mo)}
+function renderZk(){
+  if(!plan){$("zkCard").style.display="none";return}$("zkCard").style.display="";
+  const bal=zkBalance(),now=today().slice(0,7);
+  $("zkBal").textContent="¥"+fmt(bal);$("zkBal").className="bigdebt"+(bal<0?" out":"");
+  // upcoming A bills & incomes, next 12 months, unpaid
+  const ups=[];let need=0,nextIn=null;
+  for(let k=0;k<12;k++){const m=addM(now,k),pd=S.paid[m]||{};
+    monthItems(m).forEach(it=>{if(it.account!=="A"||pd[it.key])return;
+      if(it.kind==="out")ups.push(Object.assign({m},it));else if(!nextIn)nextIn=Object.assign({m},it)})}
+  if(nextIn){ups.filter(u=>u.m<nextIn.m||(u.m===nextIn.m&&u.day<nextIn.day)).forEach(u=>need+=u.amount)}
+  $("zkSub").textContent=nextIn?("下一笔进账："+(+nextIn.m.slice(5))+"/"+nextIn.day+" "+nextIn.name+" "+fmt(nextIn.amount)+" · 在那之前要付 "+fmt(need)):"";
+  $("zkWhen").textContent=need>bal?"⚠️ 钱不够":"够用 ✓";$("zkWhen").style.color=need>bal?"var(--out)":"var(--in)";
+  const tip=$("zkTip");
+  const thisIn=monthItems(now).filter(it=>it.kind==="in"&&it.account==="A");
+  if(thisIn.length){const pd=S.paid[now]||{};const left=thisIn.filter(it=>!pd[it.key]);
+    tip.style.display="";tip.textContent=left.length?("📌 本月 "+left.map(it=>(+now.slice(5))+"/"+it.day+" "+it.name+" "+fmt(it.amount)).join("、")+" 到账后，当天转进专款账户，再回来打勾"):"✓ 本月该转进专款的钱都转好了";}
+  else if(need>bal){tip.style.display="";tip.textContent="专款不够付下一笔，提前想办法：用保费宽限期、改月交，或从缓冲金补"}
+  else tip.style.display="none";
+  $("zkNext").innerHTML=ups.slice(0,4).map(u=>`<div class="debt"><div>${+u.m.slice(5)}月${u.day}日 · ${esc(u.name)}${u.hint?`<div class="r">${esc(u.hint)}</div>`:""}</div><b>${fmt(u.amount)}</b></div>`).join("")||'<div class="small">近期没有</div>';
+}
+
+/* ---------- 渲染 ---------- */
+function render(){
+  const [y,mo]=cur.split("-");$("mlabel").textContent=y+"年"+(+mo)+"月";
+  let tin=0,tout=0,bud=0;const cats={};
+  entries.forEach(e=>{if(e.type==="in")tin+=e.amount;else{tout+=e.amount;cats[e.cat]=(cats[e.cat]||0)+e.amount;if(META[e.cat]&&META[e.cat].budget)bud+=e.amount}});
+  // hero
+  const left=budget-bud,isNow=cur===today().slice(0,7);
+  $("hLeft").textContent=(left<0?"−":"")+"¥"+fmt(Math.abs(left));$("hLeft").className="num "+(left<0?"out":"");
+  let sub="预算 "+fmt(budget)+" · 已花 "+fmt(bud);
+  if(isNow&&left>0){const d=new Date(),dim=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(),rem=dim-d.getDate()+1;sub+=" · 每天约 "+fmt(left/rem)}
+  if(left<0)sub="已经超出预算 "+fmt(-left)+"，后面几天要省一点";
+  $("hSub").textContent=sub;
+  $("hBar").querySelector("i").style.width=(budget>0?Math.min(100,bud/budget*100):0)+"%";$("hBar").classList.toggle("over",left<0);
+  // todo
+  const items=monthItems(cur);let pay=0,inc=0,done=0,leftPay=0;const td=isNow?+today().slice(8):(cur<today().slice(0,7)?99:0);
+  $("todo").innerHTML=!plan?'<div class="empty">计划数据还没导入</div>':!items.length?'<div class="empty">这个月没有固定要付的</div>':items.map(it=>{
+    const isDone=!!paid[it.key];if(isDone)done++;
+    if(it.kind==="out"){pay+=it.amount;if(!isDone)leftPay+=it.amount}else inc+=it.amount;
+    const late=!isDone&&it.day<td;
+    return `<div class="todo${isDone?" done":""}${late?" late":""}" data-k="${esc(it.key)}"><div class="ck">${isDone?"✓":""}</div><div class="dd">${+cur.slice(5)}/${it.day}</div><div class="nm">${esc(it.name)}<span class="tag${it.kind==="in"?" inc":""}">${it.kind==="in"?(it.account==="A"?"转入专款":"进账"):(it.account==="A"?"专款付":"日常")}</span>${it.hint?`<small>${esc(it.hint)}</small>`:""}</div><div class="am ${it.kind==="in"?"in":""}">${it.kind==="in"?"+":""}${fmt(it.amount)}</div></div>`}).join("");
+  $("gPay").textContent=fmt(pay);$("gIn").textContent=fmt(inc);$("gCnt").textContent=done+"/"+items.length;
+  $("leftPay").textContent=leftPay>0?"还要付 "+fmt(leftPay):(items.length?"本月都付完了 🎉":"");
+  // debts
+  if(plan&&plan.debts){
+    const ds=plan.debts.filter(d=>d.balance>0);const tot=ds.reduce((s,d)=>s+d.balance,0);
+    const pol=ds.filter(d=>d.policy).reduce((s,d)=>s+d.balance,0);
+    $("dTotal").textContent="¥"+fmt(tot);$("dSplit").textContent="其中保单借款 "+fmt(pol)+"，其他 "+fmt(tot-pol);
+    $("debts").innerHTML=plan.debts.map((d,i)=>`<div class="debt" data-i="${i}"><div>${esc(d.name)}<div class="r">${d.rate!=null?"年化 "+(d.rate*100).toFixed(d.rate*100%1?2:0)+"%":"利率待填"}${d.monthly>0?" · 每月 "+fmt(d.monthly):""}${d.note?" · "+esc(d.note):""}</div></div><b class="${d.balance>0?"":"in"}">${d.balance>0?fmt(d.balance):"已还清 ✓"}</b></div>`).join("");
+  }else{$("dTotal").textContent="—";$("dSplit").textContent="";$("debts").innerHTML=""}
+  // list view
+  $("sIn").textContent=fmt(tin);$("sOut").textContent=fmt(tout);const net=tin-tout;
+  $("sNet").textContent=(net>0?"+":"")+fmt(net);$("sNet").className="val "+(net<0?"out":net>0?"in":"");
+  const ck=Object.keys(cats).sort((a,b)=>cats[b]-cats[a]),mx=ck.length?cats[ck[0]]:1;
+  $("catCard").style.display=ck.length?"":"none";
+  $("cats").innerHTML=ck.map(k=>`<div class="row"><span class="nm">${(META[k]||{}).e||"📝"} ${esc(k)}</span><span class="b"><i style="width:${cats[k]/mx*100}%"></i></span><span class="amt">${fmt(cats[k])}</span></div>`).join("");
+  if(!entries.length){$("list").innerHTML='<div class="empty">这个月还没有记录</div>'}
+  else{const s=entries.slice().sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(b.createdAt||0)-(a.createdAt||0));
+    let h="",last="";const wk="日一二三四五六",daySum={};s.forEach(e=>{if(e.type==="out")daySum[e.date]=(daySum[e.date]||0)+e.amount});
+    s.forEach(e=>{if(e.date!==last){last=e.date;const d=new Date(e.date+"T00:00:00");h+=`<div class="day"><span>${+e.date.slice(5,7)}月${+e.date.slice(8)}日 周${wk[d.getDay()]}</span><span>${daySum[e.date]?"支出 "+fmt(daySum[e.date]):""}</span></div>`}
+      h+=`<div class="item" data-id="${esc(e.id)}"><div class="emo">${(META[e.cat]||{e:"📝"}).e}</div><div class="mid"><div class="c">${esc(e.cat)}<span class="tag">${e.account==="A"?"专款":"日常"}</span></div>${e.note?`<div class="note">${esc(e.note)}</div>`:""}</div><div class="a ${e.type==="in"?"in":"out"}">${e.type==="in"?"+":"−"}${fmt(e.amount)}</div></div>`});
+    $("list").innerHTML=h}
+}
+
+/* ---------- 交互 ---------- */
+$("todo").onclick=async ev=>{
+  const row=ev.target.closest(".todo");if(!row||busy)return;const it=monthItems(cur).find(x=>x.key===row.dataset.k);if(!it)return;
+  busy=true;const done=Object.assign({},paid);
+  try{
+    const isDebt=it.key.startsWith("d:"),dn=it.key.slice(2);
+    if(done[it.key]){const v=done[it.key];const eid=typeof v==="string"?v:v.e,dec=(v&&v.d)||0;delete done[it.key];
+      if(eid)rmEntry(eid);putPaid(cur,done);
+      if(isDebt&&dec>0)adjustDebt(dn,+dec);
+      toast("已取消")}
+    else{const d=Math.min(it.day,new Date(+cur.slice(0,4),+cur.slice(5),0).getDate());const date=cur+"-"+pad(d);
+      let dec=0;if(isDebt){const db0=(plan.debts||[]).find(x=>x.name===dn);if(db0)dec=Math.min(it.amount,db0.balance||0)}
+      const eid=putEntry({type:it.kind,cat:it.cat,amount:it.amount,account:it.account,date,month:cur,note:it.name,createdAt:Date.now(),auto:it.key});
+      done[it.key]=isDebt?{e:eid,d:dec}:eid;putPaid(cur,done);
+      if(dec>0)adjustDebt(dn,-dec);
+      toast(it.kind==="in"?"已到账 ✓":(dec>0?"已付 ✓ 余额已减少":"已付 ✓"))}
+  }catch(e){toast("没保存成功，请再点一次")}
+  finally{busy=false}
+};
+$("debts").onclick=ev=>{const r=ev.target.closest(".debt");if(!r||!plan)return;openDebt(+r.dataset.i)};
+$("addDebt").onclick=()=>{if(!plan){toast("计划数据还没加载好");return}openDebt(-1)};
+function openDebt(i){editDebt=i;const isNew=i<0;const d=isNew?{name:"",balance:"",monthly:0,day:"",rate:null}:plan.debts[i];
+  $("dsName").textContent=isNew?"新增一笔负债":d.name;
+  $("dsInfo").textContent=isNew?"比如这次新借的保单贷款":[d.note,d.due?"到期 "+d.due:"",d.updated?"上次更新 "+d.updated:""].filter(Boolean).join(" · ");
+  $("dsNewRow").style.display=isNew?"":"none";$("dsNameIn").value="";
+  $("dsBal").value=d.balance;$("dsMon").value=d.monthly||0;$("dsDay").value=d.day||"";
+  $("dsRate").value=d.rate!=null?Math.round(d.rate*10000)/100:"";
+  $("dsPayBox").style.display=isNew?"none":"";$("dsPay").value="";$("dsPayAcct").value="B";show("debtSheet")}
+$("dsCancel").onclick=hideAll;
+$("dsSave").onclick=async()=>{const b=parseFloat($("dsBal").value),m=parseFloat($("dsMon").value||"0"),day=parseInt($("dsDay").value),rt=$("dsRate").value.trim();
+  if(!(b>=0)||!(m>=0)){toast("请填数字");return}
+  const p=JSON.parse(JSON.stringify(plan));let d;
+  if(editDebt<0){const nm=$("dsNameIn").value.trim();if(!nm){toast("请填名称");return}if(p.debts.some(x=>x.name===nm)){toast("名称重复了");return}
+    d={name:nm,from:cur};if(/保单/.test(nm))d.policy=true;p.debts.push(d)}else d=p.debts[editDebt];
+  d.balance=Math.round(b*100)/100;d.monthly=Math.round(m*100)/100;if(day>=1&&day<=31)d.day=day;
+  d.rate=rt===""?(d.rate!=null?d.rate:null):Math.round(parseFloat(rt)*100)/10000;if(d.rate!=null&&isNaN(d.rate))d.rate=null;
+  if(d.monthly>0&&d.to&&d.to<cur)delete d.to;
+  d.updated=today();putPlan(p);hideAll();toast("已保存")};
+$("dsPayBtn").onclick=async()=>{const v=parseFloat($("dsPay").value);if(!(v>0)){toast("请填还了多少");return}
+  if(busy)return;busy=true;const p=JSON.parse(JSON.stringify(plan));const d=p.debts[editDebt];
+  const amt=Math.round(v*100)/100;const t=today();
+  try{const dec=Math.min(amt,d.balance||0);
+    putEntry({type:"out",cat:"还款",amount:amt,account:$("dsPayAcct").value,date:t,month:t.slice(0,7),note:d.name+" 还款",createdAt:Date.now(),debt:d.name,dec});
+    d.balance=Math.max(0,Math.round((d.balance-dec)*100)/100);d.updated=t;putPlan(p);
+    hideAll();toast(d.balance>0?"已记下，还欠 "+fmt(d.balance):"这笔还清了 🎉")}
+  catch(e){toast("没保存成功，请再试一次")}finally{busy=false}};
+function adjustDebt(name,delta){if(!S.plan)return;const p=JSON.parse(JSON.stringify(S.plan));const d=(p.debts||[]).find(x=>x.name===name);if(!d)return;
+  d.balance=Math.max(0,Math.round(((d.balance||0)+delta)*100)/100);d.updated=today();putPlan(p)}
+function syncDebtPick(){const show=!editing&&type==="out"&&cat==="还款"&&plan&&plan.debts;
+  $("debtPickRow").style.display=show?"":"none";if(!show)return;
+  $("debtPick").innerHTML='<option value="">不指定（只记账）</option>'+plan.debts.filter(d=>d.balance>0).map(d=>`<option value="${esc(d.name)}">${esc(d.name)}（还欠 ${fmt(d.balance)}）</option>`).join("")}
+function drawChips(){$("catChips").innerHTML=(type==="out"?OUT:IN).map(c=>`<button class="chip${c[0]===cat?" on":""}" data-c="${c[0]}">${c[1]} ${c[0]}</button>`).join("");syncDebtPick()}
+function setType(t,keep){type=t;document.querySelectorAll("#typeSeg button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));if(!keep){cat=t==="out"?"吃饭买菜":"固定收入";$("acct").value=META[cat].a}drawChips()}
+function openSheet(e){editing=e||null;
+  if(e){setType(e.type,true);cat=e.cat;drawChips();$("amt").value=e.amount;$("acct").value=e.account||"B";$("date").value=e.date;$("note").value=e.note||"";$("delRow").style.display=""}
+  else{setType("out");$("amt").value="";const t=today();$("date").value=t.slice(0,7)===cur?t:cur+"-01";$("note").value="";$("delRow").style.display="none"}
+  show("sheet");setTimeout(()=>$("amt").focus(),250)}
+function show(id){$("mask").classList.add("show");$(id).classList.add("show")}
+function hideAll(){$("mask").classList.remove("show");["sheet","setSheet","confirmSheet","debtSheet"].forEach(i=>$(i).classList.remove("show"))}
+$("typeSeg").onclick=ev=>{const b=ev.target.closest("button");if(b)setType(b.dataset.t)};
+$("catChips").onclick=ev=>{const b=ev.target.closest(".chip");if(!b)return;cat=b.dataset.c;$("acct").value=META[cat].a;drawChips()};
+$("addBtn").onclick=()=>openSheet();$("cancel").onclick=hideAll;$("mask").onclick=hideAll;
+$("save").onclick=async()=>{const v=parseFloat(String($("amt").value).replace(/[,，\s]/g,""));if(!(v>0)){toast("请输入金额");return}
+  const date=$("date").value||today();const obj={type,cat,amount:Math.round(v*100)/100,account:$("acct").value,date,month:date.slice(0,7),note:$("note").value.trim(),createdAt:editing?editing.createdAt||Date.now():Date.now()};
+  if(editing){obj.id=editing.id;["auto","debt","dec"].forEach(k=>{if(editing[k]!=null)obj[k]=editing[k]})}
+  else if(obj.type==="out"&&obj.cat==="还款"&&$("debtPick").value){const dn=$("debtPick").value;const d0=(plan.debts||[]).find(x=>x.name===dn);
+    if(d0){obj.debt=dn;obj.dec=Math.min(obj.amount,d0.balance||0);if(!obj.note)obj.note=dn+" 还款"}}
+  putEntry(obj);if(!editing&&obj.dec>0)adjustDebt(obj.debt,-obj.dec);
+  hideAll();toast(editing?"已修改":(obj.dec>0?"已记下 ✓ "+obj.debt+" 余额已减少":"已记下 ✓"));if(obj.month!==cur){cur=obj.month;subscribe()}};
+$("list").onclick=ev=>{const it=ev.target.closest(".item");if(!it)return;const e=entries.find(x=>x.id===it.dataset.id);if(e)openSheet(e)};
+$("del").onclick=()=>{$("sheet").classList.remove("show");show("confirmSheet")};
+$("cNo").onclick=()=>{$("confirmSheet").classList.remove("show");show("sheet")};
+$("cYes").onclick=()=>{const e=editing;rmEntry(e.id);
+  if(e.auto&&paid[e.auto]){const v=paid[e.auto];const dec=(v&&v.d)||0;const d=Object.assign({},paid);delete d[e.auto];putPaid(cur,d);if(dec>0&&e.auto.startsWith("d:"))adjustDebt(e.auto.slice(2),+dec)}
+  else if(e.debt&&e.dec>0)adjustDebt(e.debt,+e.dec);
+  toast("已删除");hideAll()};
+$("prev").onclick=()=>shift(-1);$("next").onclick=()=>shift(1);
+function shift(k){let [y,m]=cur.split("-").map(Number);m+=k;if(m<1){m=12;y--}if(m>12){m=1;y++}cur=y+"-"+pad(m);subscribe()}
+document.querySelector(".tabs").onclick=ev=>{const b=ev.target.closest("button");if(!b)return;view=b.dataset.v;
+  document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("on",x===b));$("vHome").style.display=view==="home"?"":"none";$("vList").style.display=view==="list"?"":"none";window.scrollTo(0,0)};
+$("openSet").onclick=()=>{$("budgetIn").value=budget;$("startAIn").value=zkBalance();$("exportBox").style.display="none";show("setSheet")};
+$("setCancel").onclick=hideAll;
+$("exportAll").onclick=async()=>{const o={app:"dj-ledger",v:1,exported:new Date().toISOString(),plan:S.plan,entries:S.entries,paid:S.paid,budget:S.budget,startA:S.startA};
+  const txt="【DJ记账数据】"+JSON.stringify(o);const box=$("exportBox");box.value=txt;$("importBox").style.display="none";
+  try{await navigator.clipboard.writeText(txt);box.style.display="none";toast("已复制，去对话里粘贴发给 Claude")}catch(e){box.style.display="block";box.focus();box.select();toast("请长按下面的文字，全选后复制")}};
+$("syncClaude").onclick=async()=>{const o={app:"dj-ledger",v:1,exported:new Date().toISOString(),plan:S.plan,entries:S.entries,paid:S.paid,budget:S.budget,startA:S.startA};
+  const txt="【DJ记账数据】请帮我同步到记账本："+JSON.stringify(o);
+  try{await navigator.clipboard.writeText(txt);toast("已复制，正在打开 Claude…");setTimeout(()=>{location.href="https://claude.ai/"},700)}
+  catch(e){const box=$("exportBox");box.value=txt;box.style.display="block";box.focus();box.select();toast("请长按下面的文字，全选复制后，再打开 Claude 粘贴")}};
+$("importOpen").onclick=()=>{$("importBox").style.display=$("importBox").style.display==="none"?"":"none";$("exportBox").style.display="none"};
+$("importDo").onclick=()=>{let t=$("importText").value.trim();t=t.slice(t.indexOf("{"));let o;
+  try{o=JSON.parse(t)}catch(e){toast("数据不完整，请确认整段都粘贴了");return}
+  if(!o||!o.plan){toast("这段不是记账数据");return}
+  S={entries:o.entries||{},paid:o.paid||{},queue:[],budget:typeof o.budget==="number"?o.budget:2000,startA:o.startA||{amount:0,set:0},plan:o.plan};
+  Object.keys(S.entries).forEach(k=>{S.entries[k].id=k});
+  saveLocal();$("importText").value="";hideAll();refresh();toast("导入成功 ✓")};
+$("setSave").onclick=async()=>{const v=parseFloat($("budgetIn").value);if(!(v>=0)){toast("请输入预算");return}
+  const za=parseFloat($("startAIn").value);let sa=null;
+  if($("startAIn").value.trim()!==""&&za>=0&&Math.abs(za-zkBalance())>0.004){sa={amount:Math.round(za*100)/100,set:Date.now()}}
+  putBudget(Math.round(v),sa);hideAll();toast("已保存")};
+$("copyBtn").onclick=async()=>{const txt="日期,类型,分类,账户,金额,备注\n"+entries.slice().sort((a,b)=>a.date<b.date?-1:1).map(e=>[e.date,e.type==="in"?"收入":"支出",e.cat,e.account,e.amount,e.note||""].join(",")).join("\n");
+  const box=$("exportBox");box.value=txt;try{await navigator.clipboard.writeText(txt);toast("已复制")}catch(e){box.style.display="block";box.select();toast("请长按下面的文字复制")}};
+
+/* ---------- 启动 ---------- */
+subscribe();
+if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})})}
+})();
+</script>
+</body>
+</html>
