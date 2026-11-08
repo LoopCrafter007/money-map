@@ -200,8 +200,8 @@ textarea{width:100%;height:150px;border:1px solid var(--line);border-radius:10px
   <div class="f"><div><label>专款账户现在的余额（按银行 App 显示的填）</label><input id="startAIn" inputmode="decimal"></div></div>
   <div class="hint">填一次就行，之后 App 会按你记的进出自动算。和银行对不上时，再来改一下。</div>
   <div class="hint">数据只存在这部手机里。每月导出一次发给 Claude，既能更新负债表，也是一份备份。</div>
-  <div class="btns"><button class="primary" id="syncClaude">同步给 Claude</button></div>
-  <div class="hint" style="margin-top:6px">点一下会自动复制全部数据并打开 Claude，在对话里粘贴发送就行。</div>
+  <div class="btns"><button class="primary" id="syncClaude">复制数据，同步给 Claude</button></div>
+  <div class="hint" style="margin-top:6px">点一下会复制全部数据。然后自己打开 Claude，回到一直用来记账的那个对话，粘贴发送。</div>
   <div class="btns"><button class="ghost" id="exportAll">只复制数据</button></div>
   <div class="btns"><button class="ghost" id="copyBtn">只复制本月明细</button><button class="ghost" id="importOpen">导入数据</button></div>
   <textarea id="exportBox" style="display:none;margin-top:10px" readonly></textarea>
@@ -464,8 +464,8 @@ $("exportAll").onclick=async()=>{const o={app:"dj-ledger",v:1,exported:new Date(
   try{await navigator.clipboard.writeText(txt);box.style.display="none";toast("已复制，去对话里粘贴发给 Claude")}catch(e){box.style.display="block";box.focus();box.select();toast("请长按下面的文字，全选后复制")}};
 $("syncClaude").onclick=async()=>{const o={app:"dj-ledger",v:1,exported:new Date().toISOString(),plan:S.plan,entries:S.entries,paid:S.paid,budget:S.budget,startA:S.startA};
   const txt="【DJ记账数据】请帮我同步到记账本："+JSON.stringify(o);
-  try{await navigator.clipboard.writeText(txt);toast("已复制，正在打开 Claude…");setTimeout(()=>{location.href="https://claude.ai/"},700)}
-  catch(e){const box=$("exportBox");box.value=txt;box.style.display="block";box.focus();box.select();toast("请长按下面的文字，全选复制后，再打开 Claude 粘贴")}};
+  try{await navigator.clipboard.writeText(txt);toast("已复制 ✓ 请回到“记账本”那个 Claude 对话里粘贴发送")}
+  catch(e){const box=$("exportBox");box.value=txt;box.style.display="block";box.focus();box.select();toast("请长按下面的文字，全选复制后，回到 Claude 对话粘贴")}};
 $("importOpen").onclick=()=>{$("importBox").style.display=$("importBox").style.display==="none"?"":"none";$("exportBox").style.display="none"};
 $("importDo").onclick=()=>{let t=$("importText").value.trim();t=t.slice(t.indexOf("{"));let o;
   try{o=JSON.parse(t)}catch(e){toast("数据不完整，请确认整段都粘贴了");return}
