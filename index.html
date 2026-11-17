@@ -145,10 +145,10 @@ textarea{width:100%;height:150px;border:1px solid var(--line);border-radius:10px
   <div id="vList" style="display:none">
     <div class="card"><div class="grid3">
       <div><div class="lbl">收入</div><div class="val in" id="sIn">0</div></div>
-      <div><div class="lbl">支出</div><div class="val out" id="sOut">0</div></div>
-      <div><div class="lbl">结余</div><div class="val" id="sNet">0</div></div>
-    </div></div>
-    <div class="card cats" id="catCard"><div class="ttl"><span>支出分类</span></div><div id="cats"></div></div>
+      <div><div class="lbl">生活支出</div><div class="val out" id="sOut">0</div></div>
+      <div><div class="lbl">还债</div><div class="val" id="sNet">0</div></div>
+    </div><div class="small" id="sNote" style="text-align:center;margin-top:8px"></div></div>
+    <div class="card cats" id="catCard"><div class="ttl"><span>生活支出分类</span></div><div id="cats"></div></div>
     <div class="card" style="padding-top:4px"><div id="list"></div></div>
   </div>
 </div>
@@ -225,7 +225,7 @@ textarea{width:100%;height:150px;border:1px solid var(--line);border-radius:10px
 const OUT=[["吃饭买菜","🍚","B",1],["咖啡零食","☕","B",1],["交通出行","🚗","B",1],["日用杂费","🧻","B",1],["孩子日常","🎒","B",0],["水电话费","💡","B",0],
  ["医疗看病","💊","B",0],["还款","💳","B",0],["社保医保","🏥","B",0],["万能险存入","🐷","B",0],["保险保费","🛡️","A",0],
  ["学费","📚","A",0],["兴趣班","🎨","A",0],["物业费","🏠","A",0],["车险车修","🔧","A",0],["其他支出","📝","B",0]];
-const IN=[["固定收入","💰","B"],["失业金","📄","B"],["季度款","🏦","A"],["车位租金","🅿️","A"],["保险佣金","🤝","B"],["代采/副业","📦","B"],["其他收入","✨","B"]];
+const IN=[["固定收入","💰","B"],["失业金","📄","B"],["季度款","🏦","A"],["车位租金","🅿️","A"],["保险佣金","🤝","B"],["代采/副业","📦","B"],["其他收入","✨","B"],["借款到账","🏦","B"]];
 const META={};OUT.forEach(c=>META[c[0]]={e:c[1],a:c[2],budget:!!c[3]});IN.forEach(c=>META[c[0]]={e:c[1],a:c[2]});
 const $=id=>document.getElementById(id);
 const fmt=n=>(Math.round(n*100)/100).toLocaleString("zh-CN",{maximumFractionDigits:2});
@@ -338,7 +338,10 @@ function renderZk(){
 function render(){
   const [y,mo]=cur.split("-");$("mlabel").textContent=y+"年"+(+mo)+"月";
   let tin=0,tout=0,bud=0;const cats={};
-  entries.forEach(e=>{if(e.type==="in")tin+=e.amount;else{tout+=e.amount;cats[e.cat]=(cats[e.cat]||0)+e.amount;if(META[e.cat]&&META[e.cat].budget)bud+=e.amount}});
+  let trepay=0,tloan=0;
+  entries.forEach(e=>{if(e.type==="in"){if(e.cat==="借款到账")tloan+=e.amount;else tin+=e.amount}
+    else if(e.cat==="还款")trepay+=e.amount;
+    else{tout+=e.amount;cats[e.cat]=(cats[e.cat]||0)+e.amount;if(META[e.cat]&&META[e.cat].budget)bud+=e.amount}});
   // hero
   const left=budget-bud,isNow=cur===today().slice(0,7);
   $("hLeft").textContent=(left<0?"−":"")+"¥"+fmt(Math.abs(left));$("hLeft").className="num "+(left<0?"out":"");
@@ -364,8 +367,8 @@ function render(){
     $("debts").innerHTML=plan.debts.map((d,i)=>`<div class="debt" data-i="${i}"><div>${esc(d.name)}<div class="r">${d.rate!=null?"年化 "+(d.rate*100).toFixed(d.rate*100%1?2:0)+"%":"利率待填"}${d.monthly>0?" · 每月 "+fmt(d.monthly):""}${d.note?" · "+esc(d.note):""}</div></div><b class="${d.balance>0?"":"in"}">${d.balance>0?fmt(d.balance):"已还清 ✓"}</b></div>`).join("");
   }else{$("dTotal").textContent="—";$("dSplit").textContent="";$("debts").innerHTML=""}
   // list view
-  $("sIn").textContent=fmt(tin);$("sOut").textContent=fmt(tout);const net=tin-tout;
-  $("sNet").textContent=(net>0?"+":"")+fmt(net);$("sNet").className="val "+(net<0?"out":net>0?"in":"");
+  $("sIn").textContent=fmt(tin);$("sOut").textContent=fmt(tout);$("sNet").textContent=fmt(trepay);
+  $("sNote").textContent=(tloan>0?"另有借款到账 "+fmt(tloan)+"（借来的钱，不算收入）· ":"")+"用花呗、信用卡买的东西算生活支出，还它们的钱算还债，两边不相加";
   const ck=Object.keys(cats).sort((a,b)=>cats[b]-cats[a]),mx=ck.length?cats[ck[0]]:1;
   $("catCard").style.display=ck.length?"":"none";
   $("cats").innerHTML=ck.map(k=>`<div class="row"><span class="nm">${(META[k]||{}).e||"📝"} ${esc(k)}</span><span class="b"><i style="width:${cats[k]/mx*100}%"></i></span><span class="amt">${fmt(cats[k])}</span></div>`).join("");
